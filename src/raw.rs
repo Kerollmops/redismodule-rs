@@ -268,3 +268,20 @@ pub fn load_float(rdb: *mut RedisModuleIO) -> f32 {
 pub fn save_string(rdb: *mut RedisModuleIO, buf: &String) {
     unsafe { RedisModule_SaveStringBuffer.unwrap()(rdb, buf.as_ptr() as *mut i8, buf.len()) };
 }
+
+#[cfg(feature = "experimental-api")]
+pub type RedisModuleNotificationFunc = unsafe extern "C" fn(
+    ctx: *mut RedisModuleCtx,
+    type_: i32,
+    event: *const i8,
+    key: *mut RedisModuleString,
+) -> i32;
+
+#[cfg(feature = "experimental-api")]
+pub fn subscribe_to_keyspace_events(
+    ctx: *mut RedisModuleCtx,
+    types: i32,
+    cb: Option<RedisModuleNotificationFunc>) -> i32
+{
+    unsafe { RedisModule_SubscribeToKeyspaceEvents.unwrap()(ctx, types, cb) }
+}
