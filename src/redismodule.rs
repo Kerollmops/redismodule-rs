@@ -59,6 +59,8 @@ pub struct RedisString {
     pub inner: *mut raw::RedisModuleString,
 }
 
+unsafe impl Send for RedisString {}
+
 impl RedisString {
     pub fn create(ctx: *mut raw::RedisModuleCtx, s: &str) -> RedisString {
         let str = CString::new(s).unwrap();
@@ -90,6 +92,8 @@ pub struct RedisBuffer {
     buffer: *mut c_char,
     len: usize,
 }
+
+unsafe impl Send for RedisBuffer {}
 
 impl RedisBuffer {
     pub fn new(buffer: *mut c_char, len: usize) -> RedisBuffer {

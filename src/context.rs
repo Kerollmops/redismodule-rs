@@ -12,8 +12,10 @@ const FMT: *const i8 = b"v\0".as_ptr() as *const i8;
 /// Redis is a structure that's designed to give us a high-level interface to
 /// the Redis module API by abstracting away the raw C FFI calls.
 pub struct Context {
-    ctx: *mut raw::RedisModuleCtx,
+    pub(crate) ctx: *mut raw::RedisModuleCtx,
 }
+
+unsafe impl Send for Context {}
 
 impl Context {
     pub fn new(ctx: *mut raw::RedisModuleCtx) -> Self {
@@ -133,6 +135,20 @@ impl Context {
                 raw::RedisModule_ReplyWithError.unwrap()(self.ctx, msg.as_ptr()).into()
             },
         }
+    }
+
+    #[cfg(feature = "experimental-api")]
+    pub fn subscribe_to_keyspace_events(
+        &self,
+        types: i32,
+        cb: Option<raw::RedisModuleNotificationFunc>,
+    ) -> i32
+    {
+        raw::subscribe_to_keyspace_events(self.ctx, types, cb)
+    }
+
+    pub fn create_string(&self, s: &str) -> RedisString {
+        RedisString::create(self.ctx, s)
     }
 
     pub fn open_key(&self, key: &str) -> RedisKey {

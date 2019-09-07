@@ -34,6 +34,8 @@ pub struct RedisKey {
     key_str: RedisString,
 }
 
+unsafe impl Send for RedisKey {}
+
 impl RedisKey {
     pub fn open(ctx: *mut raw::RedisModuleCtx, key: &str) -> RedisKey {
         let key_str = RedisString::create(ctx, key);
@@ -96,6 +98,8 @@ pub struct RedisKeyWritable {
     #[allow(dead_code)]
     key_str: RedisString,
 }
+
+unsafe impl Send for RedisKeyWritable {}
 
 impl RedisKeyWritable {
     pub fn open(ctx: *mut raw::RedisModuleCtx, key: &str) -> RedisKeyWritable {

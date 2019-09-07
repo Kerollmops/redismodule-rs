@@ -285,3 +285,23 @@ pub fn subscribe_to_keyspace_events(
 {
     unsafe { RedisModule_SubscribeToKeyspaceEvents.unwrap()(ctx, types, cb) }
 }
+
+#[cfg(feature = "experimental-api")]
+pub fn get_thread_safe_context(bc: *mut RedisModuleBlockedClient) -> *mut RedisModuleCtx {
+    unsafe { RedisModule_GetThreadSafeContext.unwrap()(bc) }
+}
+
+#[cfg(feature = "experimental-api")]
+pub fn free_thread_safe_context(ctx: *mut RedisModuleCtx) {
+    unsafe { RedisModule_FreeThreadSafeContext.unwrap()(ctx) }
+}
+
+#[cfg(feature = "experimental-api")]
+pub fn thread_safe_context_lock(ctx: *mut RedisModuleCtx) {
+    unsafe { RedisModule_ThreadSafeContextLock.unwrap()(ctx) }
+}
+
+#[cfg(feature = "experimental-api")]
+pub fn thread_safe_context_unlock(ctx: *mut RedisModuleCtx) {
+    unsafe { RedisModule_ThreadSafeContextUnlock.unwrap()(ctx) }
+}
