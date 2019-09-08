@@ -10,7 +10,6 @@ extern crate num_traits;
 
 use libc::size_t;
 use num_traits::FromPrimitive;
-use std::ptr::null_mut;
 use std::slice;
 
 pub use crate::redisraw::bindings::*;
@@ -164,16 +163,24 @@ pub fn call_reply_string_ptr(reply: *mut RedisModuleCallReply, len: *mut size_t)
 
 pub fn call_reply_string(reply: *mut RedisModuleCallReply) -> String {
     unsafe {
-        let len: *mut size_t = null_mut();
-        let str: *mut u8 = RedisModule_CallReplyStringPtr.unwrap()(reply, len) as *mut u8;
-        String::from_utf8(
-            slice::from_raw_parts(str, *len)
-                .into_iter()
-                .map(|v| *v)
-                .collect(),
-        )
-        .unwrap()
+        let mut len: usize = 0;
+        let string = RedisModule_CallReplyStringPtr.unwrap()(reply, &mut len) as *mut u8;
+        let slice = slice::from_raw_parts(string, len);
+        let vec = slice.to_vec();
+        String::from_utf8(vec).unwrap()
     }
+}
+
+pub fn call_reply_length(reply: *mut RedisModuleCallReply) -> usize {
+    unsafe { RedisModule_CallReplyLength.unwrap()(reply) }
+}
+
+pub fn call_reply_array_element(
+    reply: *mut RedisModuleCallReply,
+    idx: usize,
+) -> *mut RedisModuleCallReply
+{
+    unsafe { RedisModule_CallReplyArrayElement.unwrap()(reply, idx) }
 }
 
 pub fn close_key(kp: *mut RedisModuleKey) {

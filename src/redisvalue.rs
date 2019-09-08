@@ -1,3 +1,6 @@
+use crate::redisraw::bindings::RedisModuleCallReply;
+use crate::{raw, RedisResult, RedisError};
+
 #[derive(Debug, PartialEq)]
 pub enum RedisValue {
     SimpleStringStatic(&'static str),
@@ -7,6 +10,37 @@ pub enum RedisValue {
     Float(f64),
     Array(Vec<RedisValue>),
     None,
+}
+
+impl RedisValue {
+    pub fn from_ptr(reply: *mut RedisModuleCallReply) -> RedisResult {
+        match raw::call_reply_type(reply) {
+            raw::ReplyType::String => {
+                let string = raw::call_reply_string(reply);
+                Ok(RedisValue::SimpleString(string))
+            },
+            raw::ReplyType::Integer => {
+                let integer = raw::call_reply_integer(reply);
+                Ok(RedisValue::Integer(integer))
+            },
+            raw::ReplyType::Array => {
+                let len = raw::call_reply_length(reply);
+                let mut array = Vec::with_capacity(len);
+
+                for i in 0..len {
+                    let reply = raw::call_reply_array_element(reply, i);
+                    let elem = RedisValue::from_ptr(reply)?;
+                    array.push(elem);
+                }
+
+                Ok(RedisValue::Array(array))
+            },
+            raw::ReplyType::Nil => Ok(RedisValue::None),
+            raw::ReplyType::Unknown | raw::ReplyType::Error => {
+                Err(RedisError::String(raw::call_reply_string(reply)))
+            },
+        }
+    }
 }
 
 impl From<()> for RedisValue {

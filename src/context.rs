@@ -65,12 +65,7 @@ impl Context {
             )
         };
 
-        let result = match raw::call_reply_type(reply) {
-            raw::ReplyType::Unknown | raw::ReplyType::Error => {
-                Err(RedisError::String(raw::call_reply_string(reply)))
-            }
-            _ => Ok(RedisValue::SimpleStringStatic("OK")),
-        };
+        let result = RedisValue::from_ptr(reply);
         raw::free_call_reply(reply);
         result
     }
