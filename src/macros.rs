@@ -93,12 +93,6 @@ macro_rules! redis_module {
                 ) } == raw::Status::Err as c_int { return raw::Status::Err as c_int; }
             }
 
-            if true {
-                redismodule::alloc::use_redis_alloc();
-            } else {
-                eprintln!("*** NOT USING Redis allocator ***");
-            }
-
             $(
                 if $init_func(ctx) == raw::Status::Err as c_int {
                     return raw::Status::Err as c_int;

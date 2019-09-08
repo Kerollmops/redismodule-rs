@@ -11,7 +11,6 @@ extern crate num_traits;
 
 use libc::size_t;
 
-pub mod alloc;
 pub mod error;
 pub mod native_types;
 pub mod raw;
@@ -33,9 +32,6 @@ pub use crate::thread_safe_context::ThreadSafeContext;
 
 pub use crate::context::Context;
 pub use crate::redismodule::*;
-
-#[global_allocator]
-static ALLOC: crate::alloc::RedisAlloc = crate::alloc::RedisAlloc;
 
 /// `LogLevel` is a level of logging to be specified with a Redis log directive.
 #[derive(Clone, Copy, Debug)]
