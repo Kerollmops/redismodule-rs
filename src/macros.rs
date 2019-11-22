@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! redis_command {
-    ($ctx: expr, $command_name:expr, $command_handler:expr, $command_flags:expr) => {{
+    ($ctx:expr, $command_name:expr, $command_handler:expr, $command_flags:expr) => {{
         let name = CString::new($command_name).unwrap();
         let flags = CString::new($command_flags).unwrap();
         let (firstkey, lastkey, keystep) = (1, 1, 1);
@@ -51,7 +51,7 @@ macro_rules! redis_command {
 #[macro_export]
 macro_rules! redis_module {
     (
-        name: $module_name:expr,
+        name: $module_name:literal,
         version: $module_version:expr,
         data_types: [
             $($data_type:ident),* $(,)*
@@ -79,25 +79,15 @@ macro_rules! redis_module {
             _argv: *mut *mut raw::RedisModuleString,
             _argc: c_int,
         ) -> c_int {
-            {
-                // We use an explicit block here to make sure all memory allocated before we
-                // switch to the Redis allocator will be out of scope and thus deallocated.
-                let module_name = CString::new($module_name).unwrap();
-                let module_version = $module_version as c_int;
+            let module_name = concat!($module_name, "\0");
+            let module_version = $module_version as c_int;
 
-                if unsafe { raw::Export_RedisModule_Init(
-                    ctx,
-                    module_name.as_ptr(),
-                    module_version,
-                    raw::REDISMODULE_APIVER_1 as c_int,
-                ) } == raw::Status::Err as c_int { return raw::Status::Err as c_int; }
-            }
-
-            if true {
-                redis_module::alloc::use_redis_alloc();
-            } else {
-                eprintln!("*** NOT USING Redis allocator ***");
-            }
+            if unsafe { raw::Export_RedisModule_Init(
+                ctx,
+                module_name.as_ptr() as *const i8,
+                module_version,
+                raw::REDISMODULE_APIVER_1 as c_int,
+            ) } == raw::Status::Err as c_int { return raw::Status::Err as c_int; }
 
             $(
                 if $init_func(ctx) == raw::Status::Err as c_int {
